@@ -29,7 +29,7 @@ class CustomDropdown extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
         ),
-        value: validSelectedItem,
+        initialValue: validSelectedItem,
         isExpanded: true,
         items: items.toSet().toList().map((String item) {
           return DropdownMenuItem<String>(

@@ -1,23 +1,21 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../../models/family_model.dart';
 import '../../core/constants/dropdown_data.dart';
-import '../../core/utils/age_calculator.dart';
+import '../../models/family_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_dropdown.dart';
 import '../../widgets/photo_picker_widget.dart';
-import 'package:intl/intl.dart';
 
 class Step1BasicInfo extends StatefulWidget {
   final GlobalKey<FormState> formKey;
-  final HeadOfFamily hof;
-  final Function(File?) onPhotoSelected;
-  final File? initialPhoto;
+  final FamilyModel family;
+  final Function(Uint8List?) onPhotoSelected;
+  final Uint8List? initialPhoto;
 
   const Step1BasicInfo({
     super.key,
     required this.formKey,
-    required this.hof,
+    required this.family,
     required this.onPhotoSelected,
     this.initialPhoto,
   });
@@ -27,34 +25,25 @@ class Step1BasicInfo extends StatefulWidget {
 }
 
 class _Step1BasicInfoState extends State<Step1BasicInfo> {
-  late TextEditingController _firstNameController;
-  late TextEditingController _middleNameController;
-  late TextEditingController _lastNameController;
-  late TextEditingController _dobController;
+  late TextEditingController _nameController;
+  late TextEditingController _fatherHusbandController;
+  late TextEditingController _motherController;
   late TextEditingController _ageController;
 
   @override
   void initState() {
     super.initState();
-    _firstNameController = TextEditingController(text: widget.hof.firstName);
-    _middleNameController = TextEditingController(text: widget.hof.middleName);
-    _lastNameController = TextEditingController(text: widget.hof.lastName);
-    _dobController = TextEditingController(
-      text: widget.hof.dob != null && widget.hof.age > 0 ? DateFormat('dd/MM/yyyy').format(widget.hof.dob!) : '',
-    );
-    _ageController = TextEditingController(text: widget.hof.age > 0 ? widget.hof.age.toString() : '');
-    
-    _firstNameController.addListener(() => widget.hof.firstName = _firstNameController.text);
-    _middleNameController.addListener(() => widget.hof.middleName = _middleNameController.text);
-    _lastNameController.addListener(() => widget.hof.lastName = _lastNameController.text);
+    _nameController = TextEditingController(text: widget.family.hofName);
+    _fatherHusbandController = TextEditingController(text: widget.family.fatherHusbandName);
+    _motherController = TextEditingController(text: widget.family.motherName);
+    _ageController = TextEditingController(text: widget.family.age > 0 ? widget.family.age.toString() : '');
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _middleNameController.dispose();
-    _lastNameController.dispose();
-    _dobController.dispose();
+    _nameController.dispose();
+    _fatherHusbandController.dispose();
+    _motherController.dispose();
     _ageController.dispose();
     super.dispose();
   }
@@ -62,18 +51,16 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: widget.hof.dob ?? DateTime.now(),
+      initialDate: widget.family.dob ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
+    if (picked != null && picked != widget.family.dob) {
       setState(() {
-        widget.hof.dob = picked;
-        _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
-        
-        final age = AgeCalculator.calculateAge(picked);
-        widget.hof.age = age;
-        _ageController.text = age.toString();
+        widget.family.dob = picked;
+        // Basic age calc
+        widget.family.age = DateTime.now().year - picked.year;
+        _ageController.text = widget.family.age.toString();
       });
     }
   }
@@ -83,58 +70,97 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
     return Form(
       key: widget.formKey,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: PhotoPickerWidget(
-              initialImage: widget.initialPhoto,
-              onImageSelected: widget.onPhotoSelected,
-              radius: 60,
-            ),
+          PhotoPickerWidget(
+            initialImage: widget.initialPhoto,
+            onImageSelected: widget.onPhotoSelected,
           ),
           const SizedBox(height: 24),
           CustomTextField(
-            label: 'First Name *',
-            controller: _firstNameController,
-            validator: (v) => v!.isEmpty ? 'Required' : null,
+            label: 'Full Name',
+            controller: _nameController,
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Please enter full name';
+              widget.family.hofName = v;
+              return null;
+            },
           ),
           CustomTextField(
-            label: 'Middle Name',
-            controller: _middleNameController,
+            label: 'Father/Husband Name',
+            controller: _fatherHusbandController,
+            validator: (v) {
+              if (v != null) widget.family.fatherHusbandName = v;
+              return null;
+            },
           ),
           CustomTextField(
-            label: 'Last Name *',
-            controller: _lastNameController,
-            validator: (v) => v!.isEmpty ? 'Required' : null,
+            label: 'Mother Name',
+            controller: _motherController,
+            validator: (v) {
+              if (v != null) widget.family.motherName = v;
+              return null;
+            },
           ),
-          CustomDropdown(
-            label: 'Blood Group *',
-            items: DropdownData.bloodGroups,
-            selectedItem: widget.hof.bloodGroup.isNotEmpty ? widget.hof.bloodGroup : null,
-            onChanged: (v) => widget.hof.bloodGroup = v ?? '',
-            validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-          ),
-          InkWell(
-            onTap: () => _selectDate(context),
-            child: IgnorePointer(
-              child: CustomTextField(
-                label: 'Date of Birth *',
-                controller: _dobController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _selectDate(context),
+                  child: AbsorbPointer(
+                    child: CustomTextField(
+                      label: 'Date of Birth',
+                      controller: TextEditingController(
+                        text: widget.family.dob != null
+                            ? "${widget.family.dob!.day}/${widget.family.dob!.month}/${widget.family.dob!.year}"
+                            : '',
+                      ),
+                      validator: (v) => widget.family.dob == null ? 'Required' : null,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          CustomTextField(
-            label: 'Age',
-            controller: _ageController,
-            readOnly: true,
+              const SizedBox(width: 16),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Age',
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  readOnly: widget.family.dob != null, // read-only if DOB is set
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    widget.family.age = int.tryParse(v) ?? 0;
+                    return null;
+                  },
+                ),
+              ),
+            ],
           ),
           CustomDropdown(
-            label: 'Marital Status *',
+            label: 'Gender',
+            items: DropdownData.genders,
+            selectedItem: widget.family.gender.isNotEmpty ? widget.family.gender : null,
+            onChanged: (v) {
+              setState(() => widget.family.gender = v ?? '');
+            },
+            validator: (v) => v == null ? 'Required' : null,
+          ),
+          CustomDropdown(
+            label: 'Blood Group',
+            items: DropdownData.bloodGroups,
+            selectedItem: widget.family.bloodGroup.isNotEmpty ? widget.family.bloodGroup : null,
+            onChanged: (v) {
+              setState(() => widget.family.bloodGroup = v ?? '');
+            },
+            validator: (v) => v == null ? 'Required' : null,
+          ),
+          CustomDropdown(
+            label: 'Marital Status',
             items: DropdownData.maritalStatuses,
-            selectedItem: widget.hof.maritalStatus.isNotEmpty ? widget.hof.maritalStatus : null,
-            onChanged: (v) => widget.hof.maritalStatus = v ?? '',
-            validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            selectedItem: widget.family.maritalStatus.isNotEmpty ? widget.family.maritalStatus : null,
+            onChanged: (v) {
+              setState(() => widget.family.maritalStatus = v ?? '');
+            },
+            validator: (v) => v == null ? 'Required' : null,
           ),
         ],
       ),

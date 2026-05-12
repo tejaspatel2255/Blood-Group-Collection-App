@@ -23,13 +23,16 @@ class FamilyDetailsScreen extends StatelessWidget {
             _buildHOFCard(context),
             const SizedBox(height: 24),
             _buildSectionHeader(context, 'Contact & Address'),
-            _buildInfoRow('Mobile', '+91 ${family.headOfFamily.mobileNumber}'),
-            _buildInfoRow('Email', family.headOfFamily.email.isNotEmpty ? family.headOfFamily.email : 'N/A'),
-            _buildInfoRow('Address', '${family.headOfFamily.village}, ${family.headOfFamily.taluka}, ${family.headOfFamily.district}, ${family.headOfFamily.state} - ${family.headOfFamily.pincode}'),
+            _buildInfoRow('Mobile', '+91 ${family.mobile}'),
+            if (family.whatsapp.isNotEmpty) _buildInfoRow('WhatsApp', '+91 ${family.whatsapp}'),
+            _buildInfoRow('Email', family.email.isNotEmpty ? family.email : 'N/A'),
+            _buildInfoRow('Address', '${family.currentAddress}\n${family.city}, ${family.state} - ${family.pinCode}'),
+            if (family.nativePlace.isNotEmpty) _buildInfoRow('Native Place', family.nativePlace),
             const SizedBox(height: 24),
             _buildSectionHeader(context, 'Education & Occupation'),
-            _buildInfoRow('Education', family.headOfFamily.education),
-            _buildInfoRow('Occupation', family.headOfFamily.occupation),
+            _buildInfoRow('Education', family.education == 'Other' ? family.educationOther : family.education),
+            _buildInfoRow('Occupation', family.occupation == 'Other' ? family.occupationOther : family.occupation),
+            _buildInfoRow('Annual Income', family.annualIncome),
             const SizedBox(height: 24),
             _buildSectionHeader(context, 'Family Members (${family.members.length})'),
             const SizedBox(height: 8),
@@ -43,8 +46,8 @@ class FamilyDetailsScreen extends StatelessWidget {
                     backgroundImage: m.photoUrl.isNotEmpty ? NetworkImage(m.photoUrl) : null,
                     child: m.photoUrl.isEmpty ? const Icon(Icons.person) : null,
                   ),
-                  title: Text('${m.firstName} ${m.lastName}'),
-                  subtitle: Text('${m.relationWithHOF} • ${m.age} yrs • ${m.bloodGroup}'),
+                  title: Text(m.name),
+                  subtitle: Text('${m.relationship} • ${m.age} yrs • ${m.bloodGroup}'),
                 ),
               )),
           ],
@@ -67,7 +70,6 @@ class FamilyDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildHOFCard(BuildContext context) {
-    final hof = family.headOfFamily;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -75,18 +77,21 @@ class FamilyDetailsScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundImage: hof.photoUrl.isNotEmpty ? NetworkImage(hof.photoUrl) : null,
-              child: hof.photoUrl.isEmpty ? const Icon(Icons.person, size: 40) : null,
+              backgroundImage: family.photoUrl.isNotEmpty ? NetworkImage(family.photoUrl) : null,
+              child: family.photoUrl.isEmpty ? const Icon(Icons.person, size: 40) : null,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${hof.firstName} ${hof.lastName}', style: Theme.of(context).textTheme.titleLarge),
-                  Text('Age: ${hof.age} • Blood Group: ${hof.bloodGroup}'),
-                  Text('DOB: ${hof.dob != null ? DateFormat('dd/MM/yyyy').format(hof.dob!) : 'N/A'}'),
-                  Text('Marital Status: ${hof.maritalStatus}'),
+                  Text(family.hofName, style: Theme.of(context).textTheme.titleLarge),
+                  if (family.fatherHusbandName.isNotEmpty) Text('C/O: ${family.fatherHusbandName}'),
+                  if (family.motherName.isNotEmpty) Text('Mother: ${family.motherName}'),
+                  const SizedBox(height: 4),
+                  Text('Age: ${family.age} • Blood Group: ${family.bloodGroup}'),
+                  Text('DOB: ${family.dob != null ? DateFormat('dd/MM/yyyy').format(family.dob!) : 'N/A'}'),
+                  Text('Gender: ${family.gender} • Marital: ${family.maritalStatus}'),
                 ],
               ),
             ),
@@ -103,7 +108,7 @@ class FamilyDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
           ),
           Expanded(child: Text(value)),

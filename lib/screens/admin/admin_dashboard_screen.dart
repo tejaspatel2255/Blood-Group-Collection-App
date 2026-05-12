@@ -8,8 +8,22 @@ import '../../widgets/family_card.dart';
 import '../../services/auth_service.dart';
 import '../../services/excel_export_service.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FamilyProvider>().loadFamilies();
+    });
+  }
 
   void _showAddOperatorDialog(BuildContext context) {
     showDialog(
@@ -19,22 +33,35 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 
   Future<void> _exportToExcel(BuildContext context, List<FamilyModel> families) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       final excelService = ExcelExportService();
       await excelService.exportFamiliesToExcel(families);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export Error: $e')));
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text('Export Error: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final familyProvider = context.watch<FamilyProvider>();
+    final families = familyProvider.families;
+    
+    int totalMembers = families.length; // Counting HOFs
+    for (var f in families) {
+      totalMembers += f.members.length;
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<FamilyProvider>().loadFamilies();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
@@ -44,65 +71,60 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<List<FamilyModel>>(
-        stream: familyProvider.getAllFamilies(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          
-          final families = snapshot.data ?? [];
-          int totalMembers = families.length; // Counting heads
-          for (var f in families) {
-            totalMembers += f.members.length;
-          }
-          
-          return Column(
-            children: [
-              _buildStatsCard(context, families.length, totalMembers),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.person_add),
-                        label: const Text('Add Operator'),
-                        onPressed: () => _showAddOperatorDialog(context),
+      body: familyProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _buildStatsCard(context, families.length, totalMembers),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.person_add),
+                          label: const Text('Add Operator'),
+                          onPressed: () => _showAddOperatorDialog(context),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.download),
-                        label: const Text('Export Excel'),
-                        onPressed: () => _exportToExcel(context, families),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.download),
+                          label: const Text('Export Excel'),
+                          onPressed: () => _exportToExcel(context, families),
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                if (familyProvider.error.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Database Error:\n${familyProvider.error}\n\nTip: Ensure Row Level Security (RLS) is disabled for testing.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
-                  ],
+                  ),
+                Expanded(
+                  child: families.isEmpty
+                      ? const Center(child: Text('No families registered yet.'))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: families.length,
+                          itemBuilder: (context, index) {
+                            return FamilyCard(
+                              family: families[index],
+                              onTap: () {
+                                context.push('/family_details', extra: families[index]);
+                              },
+                            );
+                          },
+                        ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: families.length,
-                  itemBuilder: (context, index) {
-                    return FamilyCard(
-                      family: families[index],
-                      onTap: () {
-                        context.push('/family_details', extra: families[index]);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
     );
   }
 

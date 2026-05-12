@@ -14,15 +14,18 @@ class ExcelExportService {
       
       // Header row
       List<String> headers = [
-        'Family ID',
-        'HOF Name',
-        'Mobile Number',
+        'Serial No',
+        'Name',
+        'Father/Husband',
+        'DOB',
+        'Age',
         'Blood Group',
-        'Village/City',
-        'District',
+        'Education',
+        'Occupation',
+        'Mobile',
+        'City',
         'State',
-        'Total Members',
-        'Registration Date'
+        'Members Count'
       ];
       sheetObject.appendRow(headers.map((h) => TextCellValue(h)).toList());
       
@@ -30,14 +33,17 @@ class ExcelExportService {
       for (var family in families) {
         List<String> row = [
           family.serialNumber,
-          '${family.headOfFamily.firstName} ${family.headOfFamily.lastName}',
-          family.headOfFamily.mobileNumber,
-          family.headOfFamily.bloodGroup,
-          family.headOfFamily.village,
-          family.headOfFamily.district,
-          family.headOfFamily.state,
-          (family.members.length + 1).toString(),
-          family.createdAt != null ? DateFormat('dd/MM/yyyy').format(family.createdAt!) : 'N/A',
+          family.hofName,
+          family.fatherHusbandName,
+          family.dob != null ? DateFormat('dd/MM/yyyy').format(family.dob!) : '',
+          family.age.toString(),
+          family.bloodGroup,
+          family.education,
+          family.occupation,
+          family.mobile,
+          family.city,
+          family.state,
+          (family.members.length + 1).toString(), // HOF + Members
         ];
         sheetObject.appendRow(row.map((e) => TextCellValue(e)).toList());
       }

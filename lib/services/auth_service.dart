@@ -1,26 +1,35 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum UserRole { admin, operator, hof, unauthenticated }
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   // Admin Login
   Future<UserRole> loginAdmin(String email, String password) async {
     try {
-      if (email == 'admin@familyregistry.com' && password == 'Admin@2024') {
-        // Admin@2024 is hardcoded for admin entry as per requirements.
-        // If Admin is configured in Firebase Auth, this will log them in.
-        try {
-          await _auth.signInWithEmailAndPassword(email: email, password: password);
-        } catch (_) {
-          // If admin doesn't exist in Firebase Auth yet, bypass if hardcoded matches
+      // 1. Sign in with Supabase Auth
+      final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+      
+      if (response.user != null) {
+        // 2. Check if the user has the 'admin' role in the operators table
+        final adminData = await _supabase
+            .from('operators')
+            .select('role')
+            .eq('id', response.user!.id)
+            .maybeSingle();
+            
+        if (adminData != null && adminData['role'] == 'admin') {
+          return UserRole.admin;
+        } else {
+          // If not an admin, sign them out
+          await logout();
+          throw Exception('Access denied: You do not have administrator privileges.');
         }
-        return UserRole.admin;
       }
       return UserRole.unauthenticated;
+    } on AuthException catch (e) {
+      throw Exception('Admin login failed: ${e.message}');
     } catch (e) {
       throw Exception('Admin login failed: ${e.toString()}');
     }
@@ -29,30 +38,36 @@ class AuthService {
   // Operator Login
   Future<UserRole> loginOperator(String email, String password) async {
     try {
-      UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      if (credential.user != null) {
+      final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+      if (response.user != null) {
         return UserRole.operator;
       }
       return UserRole.unauthenticated;
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('email not confirmed')) {
+        throw Exception('Email not confirmed. Please disable "Confirm email" in Supabase Auth settings or click the confirmation link.');
+      }
+      throw Exception('Operator login failed: ${e.message}');
     } catch (e) {
       throw Exception('Operator login failed: ${e.toString()}');
     }
   }
 
   // Operator Signup
-  Future<UserCredential> signupOperator(String email, String password, String name) async {
+  Future<AuthResponse> signupOperator(String email, String password, String name) async {
     try {
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      if (credential.user != null) {
-        await _firestore.collection('operators').doc(credential.user!.uid).set({
-          'uid': credential.user!.uid,
+      final response = await _supabase.auth.signUp(email: email, password: password);
+      
+      if (response.user != null) {
+        // Insert into operators table
+        await _supabase.from('operators').insert({
+          'id': response.user!.id,
           'email': email,
           'name': name,
-          'createdAt': FieldValue.serverTimestamp(),
-          'entriesCount': 0,
+          'entries_count': 0,
         });
       }
-      return credential;
+      return response;
     } catch (e) {
       throw Exception('Operator signup failed: ${e.toString()}');
     }
@@ -61,18 +76,18 @@ class AuthService {
   // HOF Login
   Future<Map<String, dynamic>?> loginHOF(String mobileNumber, String password) async {
     try {
-      QuerySnapshot query = await _firestore
-          .collection('families')
-          .where('loginCredentials.username', isEqualTo: mobileNumber)
-          .where('loginCredentials.password', isEqualTo: password)
-          .limit(1)
-          .get();
+      final response = await _supabase
+          .from('families')
+          .select('*, family_members(*)')
+          .eq('login_username', mobileNumber)
+          .eq('login_password', password)
+          .maybeSingle();
 
-      if (query.docs.isNotEmpty) {
+      if (response != null) {
         return {
           'role': UserRole.hof,
-          'familyId': query.docs.first.id,
-          'familyData': query.docs.first.data(),
+          'familyId': response['id'],
+          'familyData': response,
         };
       }
       return null;
@@ -82,8 +97,8 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
+    await _supabase.auth.signOut();
   }
 
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _supabase.auth.currentUser;
 }

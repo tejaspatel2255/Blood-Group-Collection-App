@@ -1,6 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../../models/member_model.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/dropdown_data.dart';
@@ -96,11 +95,11 @@ class _Step4FamilyCompositionState extends State<Step4FamilyComposition> {
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: member.localPhotoPath != null ? FileImage(File(member.localPhotoPath!)) : null,
-                    child: member.localPhotoPath == null ? const Icon(Icons.person) : null,
+                    backgroundImage: member.localPhotoBytes != null ? MemoryImage(member.localPhotoBytes!) : null,
+                    child: member.localPhotoBytes == null ? const Icon(Icons.person) : null,
                   ),
-                  title: Text('${member.firstName} ${member.lastName}'),
-                  subtitle: Text('${member.relationWithHOF} • ${member.age} yrs • ${member.bloodGroup}'),
+                  title: Text(member.name),
+                  subtitle: Text('${member.relationship} • ${member.age} yrs • ${member.bloodGroup}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -136,38 +135,40 @@ class _MemberFormSheet extends StatefulWidget {
 class _MemberFormSheetState extends State<_MemberFormSheet> {
   final _formKey = GlobalKey<FormState>();
   
-  late TextEditingController _firstNameController;
-  late TextEditingController _lastNameController;
+  late TextEditingController _nameController;
   late TextEditingController _dobController;
   late TextEditingController _ageController;
+  late TextEditingController _mobileController;
 
-  String _relation = '';
+  String _relationship = '';
+  String _gender = '';
   String _bloodGroup = '';
   String _maritalStatus = '';
   String _education = '';
   String _occupation = '';
   DateTime? _dob;
-  File? _photo;
+  Uint8List? _photo;
 
   @override
   void initState() {
     super.initState();
     final m = widget.initialMember;
     
-    _firstNameController = TextEditingController(text: m?.firstName ?? '');
-    _lastNameController = TextEditingController(text: m?.lastName ?? '');
+    _nameController = TextEditingController(text: m?.name ?? '');
     _dobController = TextEditingController(
-      text: m?.dob != null && m!.age > 0 ? DateFormat('dd/MM/yyyy').format(m.dob!) : '',
+      text: m?.dob != null ? DateFormat('dd/MM/yyyy').format(m!.dob!) : '',
     );
     _ageController = TextEditingController(text: m != null && m.age > 0 ? m.age.toString() : '');
+    _mobileController = TextEditingController(text: m?.mobile ?? '');
     
-    _relation = m?.relationWithHOF ?? '';
+    _relationship = m?.relationship ?? '';
+    _gender = m?.gender ?? '';
     _bloodGroup = m?.bloodGroup ?? '';
     _maritalStatus = m?.maritalStatus ?? '';
     _education = m?.education ?? '';
     _occupation = m?.occupation ?? '';
     _dob = m?.dob;
-    _photo = m?.localPhotoPath != null ? File(m!.localPhotoPath!) : null;
+    _photo = m?.localPhotoBytes;
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -194,17 +195,18 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
       }
       
       final member = MemberModel(
-        id: widget.initialMember?.id ?? const Uuid().v4(),
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
-        relationWithHOF: _relation,
+        id: widget.initialMember?.id,
+        name: _nameController.text,
+        relationship: _relationship,
+        gender: _gender,
         bloodGroup: _bloodGroup,
         dob: _dob,
         age: int.tryParse(_ageController.text) ?? 0,
         maritalStatus: _maritalStatus,
         education: _education,
         occupation: _occupation,
-        localPhotoPath: _photo?.path,
+        mobile: _mobileController.text,
+        localPhotoBytes: _photo,
       );
       
       widget.onSave(member);
@@ -234,20 +236,22 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
               ),
               const SizedBox(height: 16),
               CustomTextField(
-                label: 'First Name *',
-                controller: _firstNameController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              CustomTextField(
-                label: 'Last Name *',
-                controller: _lastNameController,
+                label: 'Full Name *',
+                controller: _nameController,
                 validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               CustomDropdown(
-                label: 'Relation with HOF *',
-                items: DropdownData.relations,
-                selectedItem: _relation.isNotEmpty ? _relation : null,
-                onChanged: (v) => _relation = v ?? '',
+                label: 'Relationship with HOF *',
+                items: DropdownData.relationshipList,
+                selectedItem: _relationship.isNotEmpty ? _relationship : null,
+                onChanged: (v) => _relationship = v ?? '',
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              CustomDropdown(
+                label: 'Gender *',
+                items: DropdownData.genders,
+                selectedItem: _gender.isNotEmpty ? _gender : null,
+                onChanged: (v) => _gender = v ?? '',
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
               CustomDropdown(
@@ -261,16 +265,17 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 onTap: () => _selectDate(context),
                 child: IgnorePointer(
                   child: CustomTextField(
-                    label: 'Date of Birth *',
+                    label: 'Date of Birth',
                     controller: _dobController,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
                   ),
                 ),
               ),
               CustomTextField(
-                label: 'Age',
+                label: 'Age *',
                 controller: _ageController,
-                readOnly: true,
+                keyboardType: TextInputType.number,
+                readOnly: _dob != null,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               CustomDropdown(
                 label: 'Marital Status *',
@@ -281,21 +286,28 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
               ),
               CustomDropdown(
                 label: 'Education *',
-                items: DropdownData.educationLevels,
+                items: DropdownData.educationList,
                 selectedItem: _education.isNotEmpty ? _education : null,
                 onChanged: (v) => _education = v ?? '',
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
               CustomDropdown(
                 label: 'Occupation *',
-                items: DropdownData.occupations,
+                items: DropdownData.occupationList,
                 selectedItem: _occupation.isNotEmpty ? _occupation : null,
                 onChanged: (v) => _occupation = v ?? '',
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
+              CustomTextField(
+                label: 'Mobile (Optional)',
+                controller: _mobileController,
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
+              ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
+                height: 55,
                 child: ElevatedButton(
                   onPressed: _save,
                   child: const Text('Save Member'),

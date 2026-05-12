@@ -1,11 +1,11 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_colors.dart';
 
 class PhotoPickerWidget extends StatefulWidget {
-  final File? initialImage;
-  final Function(File?) onImageSelected;
+  final Uint8List? initialImage;
+  final Function(Uint8List?) onImageSelected;
   final double radius;
 
   const PhotoPickerWidget({
@@ -20,7 +20,7 @@ class PhotoPickerWidget extends StatefulWidget {
 }
 
 class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
-  File? _image;
+  Uint8List? _image;
 
   @override
   void initState() {
@@ -38,8 +38,9 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
     );
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _image = File(pickedFile.path);
+        _image = bytes;
       });
       widget.onImageSelected(_image);
     }
@@ -96,7 +97,7 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
             CircleAvatar(
               radius: widget.radius,
               backgroundColor: AppColors.inputBackground,
-              backgroundImage: _image != null ? FileImage(_image!) : null,
+              backgroundImage: _image != null ? MemoryImage(_image!) : null,
               child: _image == null
                   ? Icon(Icons.person, size: widget.radius, color: AppColors.textSecondary)
                   : null,

@@ -1,14 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class OperatorModel {
-  String uid;
+  String id;
   String email;
   String name;
   DateTime? createdAt;
   int entriesCount;
 
   OperatorModel({
-    required this.uid,
+    required this.id,
     required this.email,
     required this.name,
     this.createdAt,
@@ -17,21 +15,21 @@ class OperatorModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
+      'id': id,
       'email': email,
       'name': name,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
-      'entriesCount': entriesCount,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      'entries_count': entriesCount,
     };
   }
 
   factory OperatorModel.fromMap(Map<String, dynamic> map) {
     return OperatorModel(
-      uid: map['uid'] ?? '',
+      id: map['id']?.toString() ?? '',
       email: map['email'] ?? '',
       name: map['name'] ?? '',
-      createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : null,
-      entriesCount: map['entriesCount'] ?? 0,
+      createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at']) : null,
+      entriesCount: map['entries_count'] ?? 0,
     );
   }
 }

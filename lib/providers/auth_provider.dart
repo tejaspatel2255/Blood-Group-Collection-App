@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get error => _error;
   
-  String get currentOperatorUid => _authService.currentUser?.uid ?? '';
+  String get currentOperatorUid => _authService.currentUser?.id ?? '';
 
   Future<bool> loginAdmin(String email, String password) async {
     _setLoading(true);
@@ -42,13 +42,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> signupOperator(String email, String password, String name) async {
+    _setLoading(true);
+    try {
+      final response = await _authService.signupOperator(email, password, name);
+      if (response.user != null) {
+        _role = UserRole.operator;
+        _setLoading(false);
+        return true;
+      }
+      _setError('Signup failed');
+      return false;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
   Future<bool> loginHOF(String mobile, String password) async {
     _setLoading(true);
     try {
       final result = await _authService.loginHOF(mobile, password);
       if (result != null) {
         _role = result['role'];
-        _familyId = result['familyId'];
+        _familyId = result['familyId']?.toString();
         _familyData = result['familyData'];
         _setLoading(false);
         return true;

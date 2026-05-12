@@ -1,63 +1,71 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:typed_data';
 
 class MemberModel {
-  String id;
-  String firstName;
-  String lastName;
-  String relationWithHOF;
+  String? id;
+  String? familyId;
+  String name;
+  String relationship;
   DateTime? dob;
   int age;
+  String gender;
   String bloodGroup;
   String maritalStatus;
   String education;
   String occupation;
+  String mobile;
   String photoUrl;
-  String? localPhotoPath;
+  Uint8List? localPhotoBytes;
 
   MemberModel({
-    required this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.relationWithHOF,
+    this.id,
+    this.familyId,
+    required this.name,
+    required this.relationship,
     this.dob,
     required this.age,
+    required this.gender,
     required this.bloodGroup,
     required this.maritalStatus,
     required this.education,
     required this.occupation,
+    this.mobile = '',
     this.photoUrl = '',
-    this.localPhotoPath,
+    this.localPhotoBytes,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'firstName': firstName,
-      'lastName': lastName,
-      'relationWithHOF': relationWithHOF,
-      'dob': dob != null ? Timestamp.fromDate(dob!) : null,
+      if (id != null) 'id': id,
+      if (familyId != null) 'family_id': familyId,
+      'name': name,
+      'relationship': relationship,
+      'dob': dob?.toIso8601String(),
       'age': age,
-      'bloodGroup': bloodGroup,
-      'maritalStatus': maritalStatus,
+      'gender': gender,
+      'blood_group': bloodGroup,
+      'marital_status': maritalStatus,
       'education': education,
       'occupation': occupation,
-      'photoUrl': photoUrl,
+      'mobile': mobile,
+      'photo_url': photoUrl,
     };
   }
 
   factory MemberModel.fromMap(Map<String, dynamic> map) {
     return MemberModel(
-      id: map['id'] ?? '',
-      firstName: map['firstName'] ?? '',
-      lastName: map['lastName'] ?? '',
-      relationWithHOF: map['relationWithHOF'] ?? '',
-      dob: map['dob'] != null ? (map['dob'] as Timestamp).toDate() : null,
+      id: map['id']?.toString(),
+      familyId: map['family_id']?.toString(),
+      name: map['name'] ?? '',
+      relationship: map['relationship'] ?? '',
+      dob: map['dob'] != null ? DateTime.tryParse(map['dob']) : null,
       age: map['age'] ?? 0,
-      bloodGroup: map['bloodGroup'] ?? '',
-      maritalStatus: map['maritalStatus'] ?? '',
+      gender: map['gender'] ?? '',
+      bloodGroup: map['blood_group'] ?? '',
+      maritalStatus: map['marital_status'] ?? '',
       education: map['education'] ?? '',
       occupation: map['occupation'] ?? '',
-      photoUrl: map['photoUrl'] ?? '',
+      mobile: map['mobile'] ?? '',
+      photoUrl: map['photo_url'] ?? '',
     );
   }
 }

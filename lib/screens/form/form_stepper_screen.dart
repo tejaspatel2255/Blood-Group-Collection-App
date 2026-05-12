@@ -1,15 +1,13 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../core/utils/password_generator.dart';
 import '../../models/family_model.dart';
-import '../../models/member_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/family_provider.dart';
-import '../../services/storage_service.dart';
+import '../../services/supabase_service.dart';
 
 import 'step1_basic_info.dart';
 import 'step2_address_contact.dart';
@@ -26,18 +24,20 @@ class FormStepperScreen extends StatefulWidget {
 class _FormStepperScreenState extends State<FormStepperScreen> {
   int _currentStep = 0;
   
-  final HeadOfFamily _hof = HeadOfFamily(
-    firstName: '',
-    lastName: '',
-    bloodGroup: '',
-    dob: DateTime.now(),
+  final FamilyModel _family = FamilyModel(
+    serialNumber: '',
+    createdBy: '',
+    hofName: '',
     age: 0,
+    gender: '',
+    bloodGroup: '',
     maritalStatus: '',
+    mobile: '',
+    loginUsername: '',
+    loginPassword: '',
   );
   
-  final List<MemberModel> _members = [];
-  
-  File? _hofPhoto;
+  Uint8List? _hofPhoto;
   
   final _step1Key = GlobalKey<FormState>();
   final _step2Key = GlobalKey<FormState>();
@@ -50,6 +50,7 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
     switch (_currentStep) {
       case 0:
         isValid = _step1Key.currentState?.validate() ?? false;
+        if (isValid) _step1Key.currentState?.save();
         if (isValid && _hofPhoto == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please upload a photo')),
@@ -59,9 +60,11 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
         break;
       case 1:
         isValid = _step2Key.currentState?.validate() ?? false;
+        if (isValid) _step2Key.currentState?.save();
         break;
       case 2:
         isValid = _step3Key.currentState?.validate() ?? false;
+        if (isValid) _step3Key.currentState?.save();
         break;
       case 3:
         isValid = true;
@@ -87,26 +90,39 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
     setState(() => _isSubmitting = true);
     try {
       final authProvider = context.read<AuthProvider>();
-      final storageService = StorageService();
+      final supabaseService = SupabaseService();
       
       String photoUrl = '';
       if (_hofPhoto != null) {
-        photoUrl = await storageService.uploadPhoto(_hofPhoto!, 'hof_photos');
+        try {
+          photoUrl = await supabaseService.uploadPhoto(
+            _hofPhoto!,
+            'hof_photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('⚠️ Photo upload failed: ${e.toString()}\n\nTip: Check if bucket "photos" is public and allows inserts.'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 10),
+              ),
+            );
+          }
+        }
       }
       
-      _hof.photoUrl = photoUrl;
+      _family.photoUrl = photoUrl;
+      _family.createdBy = authProvider.currentOperatorUid;
       
-      final family = FamilyModel(
-        id: const Uuid().v4(),
-        serialNumber: '',
-        headOfFamily: _hof,
-        members: _members,
-        createdBy: authProvider.currentOperatorUid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      // Generate credentials
+      _family.loginUsername = _family.mobile;
+      if (_family.dob != null) {
+        _family.loginPassword = PasswordGenerator.generateHOFPassword(_family.hofName, _family.dob!);
+      }
       
-      final success = await context.read<FamilyProvider>().submitFamilyEntry(family);
+      if (!mounted) return;
+      final success = await context.read<FamilyProvider>().addFamily(_family);
       
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -142,10 +158,10 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
               onStepCancel: _previousStep,
               steps: [
                 Step(
-                  title: const Text('Basic Info'),
+                  title: const Text('Basic'),
                   content: Step1BasicInfo(
                     formKey: _step1Key,
-                    hof: _hof,
+                    family: _family,
                     onPhotoSelected: (file) => _hofPhoto = file,
                     initialPhoto: _hofPhoto,
                   ),
@@ -156,16 +172,16 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
                   title: const Text('Address'),
                   content: Step2AddressContact(
                     formKey: _step2Key,
-                    hof: _hof,
+                    family: _family,
                   ),
                   isActive: _currentStep >= 1,
                   state: _currentStep > 1 ? StepState.complete : StepState.indexed,
                 ),
                 Step(
-                  title: const Text('Education'),
+                  title: const Text('Edu/Occ'),
                   content: Step3EducationOccupation(
                     formKey: _step3Key,
-                    hof: _hof,
+                    family: _family,
                   ),
                   isActive: _currentStep >= 2,
                   state: _currentStep > 2 ? StepState.complete : StepState.indexed,
@@ -173,11 +189,10 @@ class _FormStepperScreenState extends State<FormStepperScreen> {
                 Step(
                   title: const Text('Members'),
                   content: Step4FamilyComposition(
-                    members: _members,
+                    members: _family.members,
                     onMembersUpdated: (updatedMembers) {
                       setState(() {
-                        _members.clear();
-                        _members.addAll(updatedMembers);
+                        _family.members = updatedMembers;
                       });
                     },
                   ),

@@ -5,7 +5,7 @@ class PasswordGenerator {
   /// 1. First name in UPPERCASE (extract first word only)
   /// 2. DOB in ddmmyyyy format
   /// Example: Name = "Ramesh Patel", DOB = 15/08/1975 -> RAMESH15081975
-  static String generatePassword(String fullName, DateTime dob) {
+  static String generateHOFPassword(String fullName, DateTime dob) {
     if (fullName.trim().isEmpty) return '';
     
     // Extract first name and uppercase
