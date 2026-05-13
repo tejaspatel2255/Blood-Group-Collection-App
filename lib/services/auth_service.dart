@@ -1,9 +1,18 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum UserRole { admin, operator, hof, unauthenticated }
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  // Helper to hash password
+  String hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
 
   // Admin Login
   Future<UserRole> loginAdmin(String email, String password) async {
@@ -80,7 +89,7 @@ class AuthService {
           .from('families')
           .select('*, family_members(*)')
           .eq('login_username', mobileNumber)
-          .eq('login_password', password)
+          .eq('login_password', hashPassword(password))
           .maybeSingle();
 
       if (response != null) {

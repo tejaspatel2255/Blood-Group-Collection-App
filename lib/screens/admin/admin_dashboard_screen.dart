@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,7 @@ import '../../providers/family_provider.dart';
 import '../../models/family_model.dart';
 import '../../widgets/family_card.dart';
 import '../../services/auth_service.dart';
-import '../../services/excel_export_service.dart';
+import '../../core/utils/app_error.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -16,13 +17,65 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  String? _selectedOperatorId;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FamilyProvider>().loadFamilies();
+      context.read<FamilyProvider>().loadOperators();
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _performSearch();
+    });
+  }
+
+  void _performSearch() {
+    final query = _searchController.text.trim();
+    if (query.isNotEmpty) {
+      context.read<FamilyProvider>().searchFamilies(query);
+    } else if (_selectedOperatorId != null) {
+      context.read<FamilyProvider>().loadFamiliesByOperator(_selectedOperatorId!);
+    } else {
+      context.read<FamilyProvider>().loadFamilies();
+    }
+  }
+
+  void _confirmDelete(FamilyModel family) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: Text("Are you sure you want to delete ${family.hofName}'s record? Admin privileges will permanently remove this data."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await context.read<FamilyProvider>().deleteFamily(family.id!);
+              if (success && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record deleted')));
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAddOperatorDialog(BuildContext context) {
@@ -32,15 +85,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Future<void> _exportToExcel(BuildContext context, List<FamilyModel> families) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    try {
-      final excelService = ExcelExportService();
-      await excelService.exportFamiliesToExcel(families);
-    } catch (e) {
-      scaffoldMessenger.showSnackBar(SnackBar(content: Text('Export Error: $e')));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,39 +104,81 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               context.read<FamilyProvider>().loadFamilies();
+              context.read<FamilyProvider>().loadOperators();
             },
           ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               context.read<AuthProvider>().logout();
-              context.go('/login');
             },
           ),
         ],
       ),
-      body: familyProvider.isLoading
+      body: familyProvider.isLoading && families.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 _buildStatsCard(context, families.length, totalMembers),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Row(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
                     children: [
-                      Expanded(
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _onSearchChanged,
+                              decoration: InputDecoration(
+                                hintText: 'Search families...',
+                                prefixIcon: const Icon(Icons.search),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: DropdownButton<String>(
+                              hint: const Text('Filter'),
+                              value: _selectedOperatorId,
+                              underline: const SizedBox(),
+                              items: [
+                                const DropdownMenuItem(value: null, child: Text('All Operators')),
+                                ...familyProvider.operators.map((op) => DropdownMenuItem(
+                                      value: op['id'],
+                                      child: Text(op['name'] ?? 'Unknown'),
+                                    )),
+                              ],
+                              onChanged: (val) {
+                                setState(() => _selectedOperatorId = val);
+                                _performSearch();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.person_add),
                           label: const Text('Add Operator'),
                           onPressed: () => _showAddOperatorDialog(context),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.download),
-                          label: const Text('Export Excel'),
-                          onPressed: () => _exportToExcel(context, families),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
                       ),
                     ],
@@ -102,23 +188,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
-                      'Database Error:\n${familyProvider.error}\n\nTip: Ensure Row Level Security (RLS) is disabled for testing.',
+                      familyProvider.error,
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
                 Expanded(
                   child: families.isEmpty
-                      ? const Center(child: Text('No families registered yet.'))
+                      ? const Center(child: Text('No families found.'))
                       : ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: families.length,
                           itemBuilder: (context, index) {
+                            final family = families[index];
+                            final operatorData = familyProvider.operators.firstWhere(
+                              (op) => op['id'] == family.createdBy,
+                              orElse: () => {'name': 'Unknown'},
+                            );
                             return FamilyCard(
-                              family: families[index],
+                              family: family,
+                              operatorName: operatorData['name'],
                               onTap: () {
-                                context.push('/family_details', extra: families[index]);
+                                context.push('/family_details', extra: family);
                               },
+                              onEdit: () {
+                                context.push('/family/edit', extra: family);
+                              },
+                              onDelete: () => _confirmDelete(family),
                             );
                           },
                         ),
@@ -190,7 +286,7 @@ class _AddOperatorDialogState extends State<_AddOperatorDialog> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.friendly(e))));
         }
       } finally {
         if (mounted) setState(() => _isLoading = false);

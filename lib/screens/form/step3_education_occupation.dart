@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/dropdown_data.dart';
 import '../../models/family_model.dart';
 import '../../widgets/custom_text_field.dart';
@@ -22,10 +23,12 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
   late TextEditingController _educationOtherController;
   late TextEditingController _occupationOtherController;
 
+  static final _textRegex = RegExp(r'^[a-zA-Z\s\.]+$');
+
   @override
   void initState() {
     super.initState();
-    _educationOtherController = TextEditingController(text: widget.family.educationOther);
+    _educationOtherController  = TextEditingController(text: widget.family.educationOther);
     _occupationOtherController = TextEditingController(text: widget.family.occupationOther);
   }
 
@@ -41,55 +44,63 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
     return Form(
       key: widget.formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Education Dropdown
           CustomDropdown(
-            label: 'Education',
+            label: 'Education Level *',
             items: DropdownData.educationList,
             selectedItem: widget.family.education.isNotEmpty ? widget.family.education : null,
-            onChanged: (v) {
-              setState(() => widget.family.education = v ?? '');
-            },
-            validator: (v) => v == null ? 'Required' : null,
+            onChanged: (v) => setState(() => widget.family.education = v ?? ''),
+            validator: (v) => (v == null || v.isEmpty) ? 'Please select education level' : null,
           ),
           if (widget.family.education == 'Other')
             CustomTextField(
-              label: 'Specify Education',
+              label: 'Please specify education *',
               controller: _educationOtherController,
+              textCapitalization: TextCapitalization.words,
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Required';
-                widget.family.educationOther = v;
+                final val = v?.trim() ?? '';
+                widget.family.educationOther = val;
+                if (val.length < 2) return 'Please specify your education';
+                if (val.length > 100) return 'Too long (max 100 chars)';
+                if (!_textRegex.hasMatch(val)) return 'Please specify your education';
                 return null;
               },
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+
+          // Occupation Dropdown
           CustomDropdown(
-            label: 'Occupation',
+            label: 'Occupation *',
             items: DropdownData.occupationList,
             selectedItem: widget.family.occupation.isNotEmpty ? widget.family.occupation : null,
-            onChanged: (v) {
-              setState(() => widget.family.occupation = v ?? '');
-            },
-            validator: (v) => v == null ? 'Required' : null,
+            onChanged: (v) => setState(() => widget.family.occupation = v ?? ''),
+            validator: (v) => (v == null || v.isEmpty) ? 'Please select occupation' : null,
           ),
           if (widget.family.occupation == 'Other')
             CustomTextField(
-              label: 'Specify Occupation',
+              label: 'Please specify occupation *',
               controller: _occupationOtherController,
+              textCapitalization: TextCapitalization.words,
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Required';
-                widget.family.occupationOther = v;
+                final val = v?.trim() ?? '';
+                widget.family.occupationOther = val;
+                if (val.length < 2) return 'Please specify your occupation';
+                if (val.length > 100) return 'Too long (max 100 chars)';
+                if (!_textRegex.hasMatch(val)) return 'Please specify your occupation';
                 return null;
               },
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+
+          // Annual Income Dropdown
           CustomDropdown(
-            label: 'Annual Income',
+            label: 'Annual Income *',
             items: DropdownData.annualIncomeList,
             selectedItem: widget.family.annualIncome.isNotEmpty ? widget.family.annualIncome : null,
-            onChanged: (v) {
-              setState(() => widget.family.annualIncome = v ?? '');
-            },
-            validator: (v) => v == null ? 'Required' : null,
+            onChanged: (v) => setState(() => widget.family.annualIncome = v ?? ''),
+            validator: (v) => (v == null || v.isEmpty) ? 'Please select or enter annual income' : null,
           ),
         ],
       ),

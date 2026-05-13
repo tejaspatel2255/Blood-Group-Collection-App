@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../core/utils/app_error.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -25,7 +26,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return _role == UserRole.admin;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -37,7 +38,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return _role == UserRole.operator;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -54,7 +55,7 @@ class AuthProvider extends ChangeNotifier {
       _setError('Signup failed');
       return false;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -73,7 +74,7 @@ class AuthProvider extends ChangeNotifier {
       _setError('Invalid credentials');
       return false;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -92,8 +93,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(String msg) {
-    _error = msg;
+  void _setError(dynamic e) {
+    _error = e is String ? e : AppError.friendly(e);
     _isLoading = false;
     notifyListeners();
   }

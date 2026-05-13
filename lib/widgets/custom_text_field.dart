@@ -11,6 +11,7 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final String? prefixText;
   final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   const CustomTextField({
     super.key,
@@ -23,6 +24,7 @@ class CustomTextField extends StatelessWidget {
     this.readOnly = false,
     this.prefixText,
     this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -37,6 +39,7 @@ class CustomTextField extends StatelessWidget {
         maxLines: maxLines,
         readOnly: readOnly,
         inputFormatters: inputFormatters,
+        textCapitalization: textCapitalization,
         decoration: InputDecoration(
           labelText: label,
           prefixText: prefixText,

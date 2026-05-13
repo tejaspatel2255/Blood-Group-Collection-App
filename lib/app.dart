@@ -18,6 +18,7 @@ import 'screens/form/family_details_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/operator/operator_home_screen.dart';
 import 'screens/hof/hof_home_screen.dart';
+import 'screens/form/edit_family_screen.dart';
 import 'models/family_model.dart';
 
 class FamilyRegistryApp extends StatefulWidget {
@@ -45,14 +46,13 @@ class _FamilyRegistryAppState extends State<FamilyRegistryApp> {
         
         final isLoggedIn = authProvider.role != UserRole.unauthenticated;
 
-        if (isSplash) return null; // Let splash screen handle its own initial logic
+        if (isSplash) return null;
 
         if (!isLoggedIn && !isLogin && !isSplash) {
-          return '/login'; // Unauthenticated trying to access protected route
+          return '/login';
         }
 
         if (isLoggedIn && isLogin) {
-          // Logged in trying to access login page, redirect to correct dashboard
           switch (authProvider.role) {
             case UserRole.admin:
               return '/admin/dashboard';
@@ -70,15 +70,18 @@ class _FamilyRegistryAppState extends State<FamilyRegistryApp> {
           if (path.startsWith('/admin') && authProvider.role != UserRole.admin) {
             return '/login';
           }
-          if (path.startsWith('/operator') && authProvider.role != UserRole.operator && path != '/operator/new_entry') {
+          if (path.startsWith('/operator') && 
+              authProvider.role != UserRole.operator && 
+              path != '/operator/new_entry' && 
+              path != '/family/edit') {
             return '/login';
           }
-          if (path.startsWith('/hof') && authProvider.role != UserRole.hof) {
+          if (path.startsWith('/hof') && authProvider.role != UserRole.hof && path != '/family/edit') {
             return '/login';
           }
         }
 
-        return null; // No redirect needed
+        return null;
       },
       routes: [
         GoRoute(
@@ -126,6 +129,13 @@ class _FamilyRegistryAppState extends State<FamilyRegistryApp> {
           builder: (context, state) {
             final family = state.extra as FamilyModel;
             return FamilyDetailsScreen(family: family);
+          },
+        ),
+        GoRoute(
+          path: '/family/edit',
+          builder: (context, state) {
+            final family = state.extra as FamilyModel;
+            return EditFamilyScreen(family: family);
           },
         ),
       ],

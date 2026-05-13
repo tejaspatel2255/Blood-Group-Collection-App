@@ -5,12 +5,14 @@ import '../../core/constants/app_colors.dart';
 
 class PhotoPickerWidget extends StatefulWidget {
   final Uint8List? initialImage;
+  final String? imageUrl;
   final Function(Uint8List?) onImageSelected;
   final double radius;
 
   const PhotoPickerWidget({
     super.key,
     this.initialImage,
+    this.imageUrl,
     required this.onImageSelected,
     this.radius = 50,
   });
@@ -68,18 +70,6 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
                   Navigator.of(context).pop();
                 },
               ),
-              if (_image != null)
-                ListTile(
-                  leading: const Icon(Icons.delete, color: AppColors.error),
-                  title: const Text('Remove Photo', style: TextStyle(color: AppColors.error)),
-                  onTap: () {
-                    setState(() {
-                      _image = null;
-                    });
-                    widget.onImageSelected(null);
-                    Navigator.of(context).pop();
-                  },
-                ),
             ],
           ),
         );
@@ -97,8 +87,12 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
             CircleAvatar(
               radius: widget.radius,
               backgroundColor: AppColors.inputBackground,
-              backgroundImage: _image != null ? MemoryImage(_image!) : null,
-              child: _image == null
+              backgroundImage: _image != null 
+                  ? MemoryImage(_image!) 
+                  : (widget.imageUrl != null && widget.imageUrl!.isNotEmpty 
+                      ? NetworkImage(widget.imageUrl!) 
+                      : null) as ImageProvider?,
+              child: (_image == null && (widget.imageUrl == null || widget.imageUrl!.isEmpty))
                   ? Icon(Icons.person, size: widget.radius, color: AppColors.textSecondary)
                   : null,
             ),

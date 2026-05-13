@@ -43,12 +43,13 @@ dependencies:
   lottie: ^3.3.0
   shimmer: ^3.0.0
   fluttertoast: ^9.0.0
-  excel: ^4.0.6
   cached_network_image: ^3.4.1
   flutter_animate: ^4.5.2
-  path_provider: ^2.1.5
   share_plus: ^13.1.0
   path: ^1.9.1
+  crypto: ^3.0.6
+  flutter_dotenv: ^5.2.1
+  shared_preferences: ^2.5.2
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +72,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

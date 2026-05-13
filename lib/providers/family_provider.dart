@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/family_model.dart';
 import '../services/supabase_service.dart';
+import '../core/utils/app_error.dart';
 
 class FamilyProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -19,7 +20,7 @@ class FamilyProvider extends ChangeNotifier {
       _families = await _supabaseService.getFamilies();
       _setLoading(false);
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
     }
   }
 
@@ -29,7 +30,7 @@ class FamilyProvider extends ChangeNotifier {
       _families = await _supabaseService.getFamiliesByOperator(operatorId);
       _setLoading(false);
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
     }
   }
 
@@ -39,7 +40,7 @@ class FamilyProvider extends ChangeNotifier {
       _families = await _supabaseService.searchFamilies(query);
       _setLoading(false);
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
     }
   }
 
@@ -47,10 +48,17 @@ class FamilyProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       await _supabaseService.createFamily(family);
-      _setLoading(false);
+      // Auto-refresh based on role/context (Admin sees all, Operator sees theirs)
+      // For simplicity, we'll let the UI decide or just load all if it's admin.
+      // But typically we want to refresh the current view.
+      if (family.createdBy.isNotEmpty) {
+        await loadFamiliesByOperator(family.createdBy);
+      } else {
+        await loadFamilies();
+      }
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -59,10 +67,14 @@ class FamilyProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       await _supabaseService.updateFamily(family);
-      _setLoading(false);
+      if (family.createdBy.isNotEmpty) {
+        await loadFamiliesByOperator(family.createdBy);
+      } else {
+        await loadFamilies();
+      }
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
     }
   }
@@ -75,8 +87,30 @@ class FamilyProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _setError(e);
       return false;
+    }
+  }
+
+  List<Map<String, dynamic>> _operators = [];
+  List<Map<String, dynamic>> get operators => _operators;
+
+  Future<void> loadOperators() async {
+    try {
+      _operators = await _supabaseService.getOperators();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading operators: $e');
+    }
+  }
+
+  Future<void> searchFamiliesForOperator(String query, String operatorId) async {
+    _setLoading(true);
+    try {
+      _families = await _supabaseService.searchFamiliesForOperator(query, operatorId);
+      _setLoading(false);
+    } catch (e) {
+      _setError(e);
     }
   }
 
@@ -86,8 +120,8 @@ class FamilyProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(String msg) {
-    _error = msg;
+  void _setError(dynamic e) {
+    _error = AppError.friendly(e);
     _isLoading = false;
     notifyListeners();
   }

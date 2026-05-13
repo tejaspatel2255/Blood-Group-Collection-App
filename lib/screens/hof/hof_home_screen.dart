@@ -27,7 +27,6 @@ class HOFHomeScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             onPressed: () {
               authProvider.logout();
-              context.go('/login');
             },
           ),
         ],
@@ -39,7 +38,20 @@ class HOFHomeScreen extends StatelessWidget {
           children: [
             _buildProfileHeader(context, family),
             const SizedBox(height: 24),
-            Text('Family Members (${family.members.length})', style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Family Members (${family.members.length})', style: Theme.of(context).textTheme.titleLarge),
+                ElevatedButton.icon(
+                  onPressed: () => context.push('/family/edit', extra: family),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Edit Profile'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             ...family.members.map((m) => Card(
               margin: const EdgeInsets.only(bottom: 8),
