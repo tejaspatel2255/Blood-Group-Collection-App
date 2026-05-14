@@ -108,10 +108,13 @@ class FamilyModel {
       'state': state,
       'pin_code': pinCode,
       'mobile': mobile,
+      'mobile_country_code': mobileCountryCode,
       'whatsapp': whatsapp,
+      'whatsapp_country_code': whatsappCountryCode,
       'email': email,
       'login_username': loginUsername,
       'login_password': loginPassword,
+      'age': age,
       'family_members': members.map((m) => m.toMap()).toList(),
     };
   }

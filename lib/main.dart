@@ -9,12 +9,23 @@ import 'providers/family_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await dotenv.load(fileName: ".env");
-  
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
+  try {
+    await dotenv.load(fileName: ".env");
+    
+    final url = dotenv.env['SUPABASE_URL'] ?? '';
+    final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+    if (url.isEmpty || anonKey.isEmpty) {
+      debugPrint('Error: Supabase URL or Anon Key is missing in .env');
+    } else {
+      await Supabase.initialize(
+        url: url,
+        anonKey: anonKey,
+      );
+    }
+  } catch (e) {
+    debugPrint('Initialization error: $e');
+  }
 
   runApp(
     MultiProvider(

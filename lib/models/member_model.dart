@@ -53,6 +53,8 @@ class MemberModel {
       'education': education,
       'occupation': occupation,
       'mobile': mobile,
+      'mobile_country_code': mobileCountryCode,
+      'age': age,
       'photo_url': photoUrl,
     };
   }
