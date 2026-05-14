@@ -260,6 +260,15 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             onChanged: (v) => setState(() => widget.family.maritalStatus = v ?? ''),
             validator: (v) => (v == null || v.isEmpty) ? 'Please select marital status' : null,
           ),
+
+          // ── Area ──────────────────────────────────────────────────────────
+          CustomDropdown(
+            label: 'Area *',
+            items: const ['Motapore', 'Nanapore', 'Vachewad'],
+            selectedItem: widget.family.area.isNotEmpty ? widget.family.area : null,
+            onChanged: (v) => setState(() => widget.family.area = v ?? ''),
+            validator: (v) => (v == null || v.isEmpty) ? 'Please select an area' : null,
+          ),
         ],
       ),
     );

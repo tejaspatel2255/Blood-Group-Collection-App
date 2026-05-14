@@ -17,6 +17,7 @@ class FamilyModel {
   String gender;
   String bloodGroup;
   String maritalStatus;
+  String area;
   String education;
   String educationOther;
   String occupation;
@@ -57,6 +58,7 @@ class FamilyModel {
     required this.gender,
     required this.bloodGroup,
     required this.maritalStatus,
+    this.area = '',
     this.education = '',
     this.educationOther = '',
     this.occupation = '',
@@ -93,6 +95,7 @@ class FamilyModel {
       'gender': gender,
       'blood_group': bloodGroup,
       'marital_status': maritalStatus,
+      'area': area,
       'education': education,
       'education_other': educationOther,
       'occupation': occupation,
@@ -129,6 +132,7 @@ class FamilyModel {
       gender: map['gender'] ?? '',
       bloodGroup: map['blood_group'] ?? '',
       maritalStatus: map['marital_status'] ?? '',
+      area: map['area'] ?? '',
       education: map['education'] ?? '',
       educationOther: map['education_other'] ?? '',
       occupation: map['occupation'] ?? '',
@@ -168,6 +172,7 @@ class FamilyModel {
     String? gender,
     String? bloodGroup,
     String? maritalStatus,
+    String? area,
     String? education,
     String? educationOther,
     String? occupation,
@@ -202,6 +207,7 @@ class FamilyModel {
       gender: gender ?? this.gender,
       bloodGroup: bloodGroup ?? this.bloodGroup,
       maritalStatus: maritalStatus ?? this.maritalStatus,
+      area: area ?? this.area,
       education: education ?? this.education,
       educationOther: educationOther ?? this.educationOther,
       occupation: occupation ?? this.occupation,

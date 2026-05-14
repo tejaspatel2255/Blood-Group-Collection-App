@@ -516,7 +516,9 @@ class _Step2AddressContactState extends State<Step2AddressContact> {
                   validator: (v) {
                     final val = v?.trim() ?? '';
                     widget.family.pinCode = val;
+                    if (val.isEmpty) return 'PIN code is required';
                     if (val.length != 6) return 'Enter a valid 6-digit PIN code';
+                    if (val.startsWith('0')) return 'PIN code cannot start with 0';
                     return null;
                   },
                 ),
@@ -594,12 +596,13 @@ class _Step2AddressContactState extends State<Step2AddressContact> {
 
           // ── Email ────────────────────────────────────────────────────────
           CustomTextField(
-            label: 'Email *',
+            label: 'Email',
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (v) {
               final val = v?.trim() ?? '';
               widget.family.email = val;
+              if (val.isEmpty) return null; // Not compulsory
               if (!_emailRegex.hasMatch(val)) return 'Enter a valid email address';
               return null;
             },

@@ -63,3 +63,6 @@ app.*.map.json
 # Generated / temp files
 lib.zip
 analysis_output.txt
+*.zip
+*.rar
+*.7z

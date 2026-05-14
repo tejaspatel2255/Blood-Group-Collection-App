@@ -431,6 +431,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
   String _gender = '';
   String _bloodGroup = '';
   String _maritalStatus = '';
+  String _area = '';
   String _education = '';
   String _occupation = '';
   DateTime? _dob;
@@ -479,6 +480,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
     _gender = m?.gender ?? '';
     _bloodGroup = m?.bloodGroup ?? '';
     _maritalStatus = m?.maritalStatus ?? '';
+    _area = m?.area ?? '';
     _education = m?.education ?? '';
     _occupation = m?.occupation ?? '';
     _dob = m?.dob;
@@ -677,6 +679,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
       dob: _dob,
       age: int.tryParse(_ageController.text.trim()) ?? 0,
       maritalStatus: _maritalStatus,
+      area: _area,
       education: _education,
       occupation: _occupation,
       mobile: _mobileController.text.trim(),
@@ -864,6 +867,16 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                   validator: (v) =>
                       (v == null || v.isEmpty) ? 'Please select marital status' : null,
                 ),
+
+              // ── Area ──────────────────────────────────────────────────────
+              CustomDropdown(
+                label: 'Area *',
+                items: const ['Motapore', 'Nanapore', 'Vachewad'],
+                selectedItem: _area.isNotEmpty ? _area : null,
+                onChanged: (v) => setState(() => _area = v ?? ''),
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Please select an area' : null,
+              ),
 
               // ── Education ─────────────────────────────────────────────────
               CustomDropdown(

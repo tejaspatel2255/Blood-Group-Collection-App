@@ -11,6 +11,7 @@ class MemberModel {
   String gender;
   String bloodGroup;
   String maritalStatus;
+  String area;
   String education;
   String occupation;
   String mobile;
@@ -28,6 +29,7 @@ class MemberModel {
     required this.gender,
     required this.bloodGroup,
     required this.maritalStatus,
+    this.area = '',
     required this.education,
     required this.occupation,
     this.mobile = '',
@@ -47,6 +49,7 @@ class MemberModel {
       'gender': gender,
       'blood_group': bloodGroup,
       'marital_status': maritalStatus,
+      'area': area,
       'education': education,
       'occupation': occupation,
       'mobile': mobile,
@@ -66,6 +69,7 @@ class MemberModel {
       gender: map['gender'] ?? '',
       bloodGroup: map['blood_group'] ?? '',
       maritalStatus: map['marital_status'] ?? '',
+      area: map['area'] ?? '',
       education: map['education'] ?? '',
       occupation: map['occupation'] ?? '',
       mobile: map['mobile'] ?? '',
@@ -84,6 +88,7 @@ class MemberModel {
     String? gender,
     String? bloodGroup,
     String? maritalStatus,
+    String? area,
     String? education,
     String? occupation,
     String? mobile,
@@ -101,6 +106,7 @@ class MemberModel {
       gender: gender ?? this.gender,
       bloodGroup: bloodGroup ?? this.bloodGroup,
       maritalStatus: maritalStatus ?? this.maritalStatus,
+      area: area ?? this.area,
       education: education ?? this.education,
       occupation: occupation ?? this.occupation,
       mobile: mobile ?? this.mobile,

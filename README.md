@@ -20,10 +20,10 @@ The **Family Registry System** is a multi-role data collection and management ap
 | **Head of Family (HOF)** | View and update their own family record |
 
 ### 📋 4-Step Family Registration Form
-1. **Basic Info** — HOF name, father/mother name, DOB (auto-calculates age), gender, blood group, marital status, photo upload
-2. **Address & Contact** — Full address, native place, city, PIN, state (default: Gujarat), mobile & WhatsApp with **international country code picker** (160+ countries), email
+1. **Basic Info** — HOF name, father/mother name, DOB (auto-calculates age), gender, blood group, marital status, **Area selection (Motapore/Nanapore/Vachewad)**, photo upload
+2. **Address & Contact** — Full address, native place, city, PIN, state (default: Gujarat), mobile & WhatsApp with **international country code picker** (160+ countries), email (optional)
 3. **Education & Occupation** — Education level, occupation, annual income with "Other" specification
-4. **Family Members** — Add unlimited members with photo, all details, and country code mobile picker
+4. **Family Members** — Add unlimited members with photo, all details, **Area selection**, and country code mobile picker
 
 ### 🌍 International Support
 - Country code picker with **160+ countries** (flag + name + dial code)
