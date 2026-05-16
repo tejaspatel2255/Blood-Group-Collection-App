@@ -83,14 +83,19 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           controller: _emailController,
                           decoration: const InputDecoration(labelText: 'Admin Email'),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v!.isEmpty || !v.contains('@') ? 'Enter a valid admin email' : null,
+                          validator: (v) {
+                            final val = v?.trim() ?? '';
+                            if (val.isEmpty) return 'Admin Email is required';
+                            if (!val.contains('@')) return 'Enter a valid Admin Email';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
                           decoration: const InputDecoration(labelText: 'Password'),
                           obscureText: true,
-                          validator: (v) => v!.isEmpty ? 'Enter password' : null,
+                          validator: (v) => v!.isEmpty ? 'Password is required' : null,
                         ),
                         const SizedBox(height: 32),
                         SizedBox(

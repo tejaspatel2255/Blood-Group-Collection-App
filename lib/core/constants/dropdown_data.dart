@@ -41,7 +41,7 @@ class DropdownData {
   ];
 
   static const List<String> relationshipList = [
-    'HOF', 'Father', 'Mother', 'Husband', 'Wife',
+    'Father', 'Mother', 'Husband', 'Wife',
     'Son', 'Daughter', 'Daughter-in-law', 'Brother', 'Sister',
     'Uncle', 'Aunty', 'Grand Son', 'Grand Daughter', 'Other'
   ];

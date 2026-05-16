@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 24),
               
               Text(
-                'Family Registry',
+                'Family Registry System',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                 ),

@@ -162,9 +162,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             validator: (v) {
               final val = v?.trim() ?? '';
               widget.family.hofName = val;
-              if (val.length < 2) return 'Enter a valid full name (letters only, min 2 chars)';
-              if (val.length > 100) return 'Name too long (max 100 chars)';
-              if (!_nameRegex.hasMatch(val)) return 'Enter a valid full name (letters only, min 2 chars)';
+              if (val.isEmpty) return 'Full Name is required';
+              if (val.length < 2) return 'Full Name must be at least 2 characters';
+              if (val.length > 100) return 'Full Name too long (max 100 chars)';
+              if (!_nameRegex.hasMatch(val)) return 'Enter a valid Full Name (letters and spaces only)';
               return null;
             },
           ),
@@ -177,9 +178,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             validator: (v) {
               final val = v?.trim() ?? '';
               widget.family.fatherHusbandName = val;
-              if (val.length < 2) return 'Enter a valid name (letters only)';
+              if (val.isEmpty) return "Father's / Husband's Name is required";
+              if (val.length < 2) return 'Name must be at least 2 characters';
               if (val.length > 100) return 'Name too long (max 100 chars)';
-              if (!_nameRegex.hasMatch(val)) return 'Enter a valid name (letters only)';
+              if (!_nameRegex.hasMatch(val)) return 'Enter a valid name (letters and spaces only)';
               return null;
             },
           ),
@@ -192,9 +194,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             validator: (v) {
               final val = v?.trim() ?? '';
               widget.family.motherName = val;
-              if (val.length < 2) return 'Enter a valid name (letters only)';
+              if (val.isEmpty) return "Mother's Name is required";
+              if (val.length < 2) return 'Name must be at least 2 characters';
               if (val.length > 100) return 'Name too long (max 100 chars)';
-              if (!_nameRegex.hasMatch(val)) return 'Enter a valid name (letters only)';
+              if (!_nameRegex.hasMatch(val)) return 'Enter a valid name (letters and spaces only)';
               return null;
             },
           ),
@@ -211,7 +214,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       label: 'Date of Birth *',
                       controller: _dobController,
                       validator: (_) {
-                        if (widget.family.dob == null) return 'Date of birth is required';
+                        if (widget.family.dob == null) return 'Date of Birth is required';
                         if (widget.family.dob!.isAfter(DateTime.now())) {
                           return 'Cannot be a future date';
                         }
@@ -240,7 +243,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             items: DropdownData.genders,
             selectedItem: widget.family.gender.isNotEmpty ? widget.family.gender : null,
             onChanged: (v) => setState(() => widget.family.gender = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select gender' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Gender is required' : null,
           ),
 
           // ── Blood Group ─────────────────────────────────────────────────
@@ -249,7 +252,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             items: DropdownData.bloodGroups,
             selectedItem: widget.family.bloodGroup.isNotEmpty ? widget.family.bloodGroup : null,
             onChanged: (v) => setState(() => widget.family.bloodGroup = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select a blood group' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Blood Group is required' : null,
           ),
 
           // ── Marital Status ──────────────────────────────────────────────
@@ -258,7 +261,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             items: DropdownData.maritalStatuses,
             selectedItem: widget.family.maritalStatus.isNotEmpty ? widget.family.maritalStatus : null,
             onChanged: (v) => setState(() => widget.family.maritalStatus = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select marital status' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Marital Status is required' : null,
           ),
 
           // ── Area ──────────────────────────────────────────────────────────
@@ -267,7 +270,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             items: const ['Motapore', 'Nanapore', 'Vachewad'],
             selectedItem: widget.family.area.isNotEmpty ? widget.family.area : null,
             onChanged: (v) => setState(() => widget.family.area = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select an area' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Area is required' : null,
           ),
         ],
       ),

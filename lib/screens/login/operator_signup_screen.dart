@@ -87,21 +87,31 @@ class _OperatorSignupScreenState extends State<OperatorSignupScreen> {
                         TextFormField(
                           controller: _nameController,
                           decoration: const InputDecoration(labelText: 'Full Name'),
-                          validator: (v) => v!.isEmpty ? 'Enter full name' : null,
+                          validator: (v) => v!.trim().isEmpty ? 'Full Name is required' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _emailController,
                           decoration: const InputDecoration(labelText: 'Email Address'),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v!.isEmpty || !v.contains('@') ? 'Enter a valid email' : null,
+                          validator: (v) {
+                            final val = v?.trim() ?? '';
+                            if (val.isEmpty) return 'Email Address is required';
+                            if (!val.contains('@')) return 'Enter a valid Email Address';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
                           decoration: const InputDecoration(labelText: 'Password'),
                           obscureText: true,
-                          validator: (v) => v!.length < 6 ? 'Password must be at least 6 characters' : null,
+                          validator: (v) {
+                            final val = v?.trim() ?? '';
+                            if (val.isEmpty) return 'Password is required';
+                            if (val.length < 6) return 'Password must be at least 6 characters';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 32),
                         SizedBox(

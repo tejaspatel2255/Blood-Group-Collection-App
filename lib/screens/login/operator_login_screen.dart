@@ -85,14 +85,24 @@ class _OperatorLoginScreenState extends State<OperatorLoginScreen> {
                           controller: _emailController,
                           decoration: const InputDecoration(labelText: 'Email Address'),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v!.isEmpty || !v.contains('@') ? 'Enter a valid email' : null,
+                          validator: (v) {
+                            final val = v?.trim() ?? '';
+                            if (val.isEmpty) return 'Email Address is required';
+                            if (!val.contains('@')) return 'Enter a valid Email Address';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
                           decoration: const InputDecoration(labelText: 'Password'),
                           obscureText: true,
-                          validator: (v) => v!.length < 6 ? 'Password must be at least 6 characters' : null,
+                          validator: (v) {
+                            final val = v?.trim() ?? '';
+                            if (val.isEmpty) return 'Password is required';
+                            if (val.length < 6) return 'Password must be at least 6 characters';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 32),
                         SizedBox(

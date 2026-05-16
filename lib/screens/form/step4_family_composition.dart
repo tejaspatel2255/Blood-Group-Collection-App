@@ -2,177 +2,15 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/member_model.dart';
+import '../../models/country_model.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/dropdown_data.dart';
+import '../../core/constants/countries.dart';
 import '../../core/utils/age_calculator.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_dropdown.dart';
 import '../../widgets/photo_picker_widget.dart';
 import 'package:intl/intl.dart';
-
-// ─── Country data ──────────────────────────────────────────────────────────
-class _Country {
-  final String flag;
-  final String name;
-  final String dialCode;
-  const _Country(this.flag, this.name, this.dialCode);
-}
-
-const List<_Country> _countries = [
-  _Country('🇦🇫', 'Afghanistan', '+93'),
-  _Country('🇦🇱', 'Albania', '+355'),
-  _Country('🇩🇿', 'Algeria', '+213'),
-  _Country('🇦🇩', 'Andorra', '+376'),
-  _Country('🇦🇴', 'Angola', '+244'),
-  _Country('🇦🇷', 'Argentina', '+54'),
-  _Country('🇦🇲', 'Armenia', '+374'),
-  _Country('🇦🇺', 'Australia', '+61'),
-  _Country('🇦🇹', 'Austria', '+43'),
-  _Country('🇦🇿', 'Azerbaijan', '+994'),
-  _Country('🇧🇭', 'Bahrain', '+973'),
-  _Country('🇧🇩', 'Bangladesh', '+880'),
-  _Country('🇧🇾', 'Belarus', '+375'),
-  _Country('🇧🇪', 'Belgium', '+32'),
-  _Country('🇧🇿', 'Belize', '+501'),
-  _Country('🇧🇯', 'Benin', '+229'),
-  _Country('🇧🇹', 'Bhutan', '+975'),
-  _Country('🇧🇴', 'Bolivia', '+591'),
-  _Country('🇧🇦', 'Bosnia & Herzegovina', '+387'),
-  _Country('🇧🇼', 'Botswana', '+267'),
-  _Country('🇧🇷', 'Brazil', '+55'),
-  _Country('🇧🇳', 'Brunei', '+673'),
-  _Country('🇧🇬', 'Bulgaria', '+359'),
-  _Country('🇧🇫', 'Burkina Faso', '+226'),
-  _Country('🇧🇮', 'Burundi', '+257'),
-  _Country('🇰🇭', 'Cambodia', '+855'),
-  _Country('🇨🇲', 'Cameroon', '+237'),
-  _Country('🇨🇦', 'Canada', '+1'),
-  _Country('🇨🇫', 'Central African Republic', '+236'),
-  _Country('🇹🇩', 'Chad', '+235'),
-  _Country('🇨🇱', 'Chile', '+56'),
-  _Country('🇨🇳', 'China', '+86'),
-  _Country('🇨🇴', 'Colombia', '+57'),
-  _Country('🇨🇷', 'Costa Rica', '+506'),
-  _Country('🇭🇷', 'Croatia', '+385'),
-  _Country('🇨🇺', 'Cuba', '+53'),
-  _Country('🇨🇾', 'Cyprus', '+357'),
-  _Country('🇨🇿', 'Czech Republic', '+420'),
-  _Country('🇩🇰', 'Denmark', '+45'),
-  _Country('🇩🇴', 'Dominican Republic', '+1-809'),
-  _Country('🇪🇨', 'Ecuador', '+593'),
-  _Country('🇪🇬', 'Egypt', '+20'),
-  _Country('🇸🇻', 'El Salvador', '+503'),
-  _Country('🇪🇪', 'Estonia', '+372'),
-  _Country('🇪🇹', 'Ethiopia', '+251'),
-  _Country('🇫🇯', 'Fiji', '+679'),
-  _Country('🇫🇮', 'Finland', '+358'),
-  _Country('🇫🇷', 'France', '+33'),
-  _Country('🇬🇦', 'Gabon', '+241'),
-  _Country('🇬🇲', 'Gambia', '+220'),
-  _Country('🇬🇪', 'Georgia', '+995'),
-  _Country('🇩🇪', 'Germany', '+49'),
-  _Country('🇬🇭', 'Ghana', '+233'),
-  _Country('🇬🇷', 'Greece', '+30'),
-  _Country('🇬🇹', 'Guatemala', '+502'),
-  _Country('🇬🇳', 'Guinea', '+224'),
-  _Country('🇬🇾', 'Guyana', '+592'),
-  _Country('🇭🇹', 'Haiti', '+509'),
-  _Country('🇭🇳', 'Honduras', '+504'),
-  _Country('🇭🇺', 'Hungary', '+36'),
-  _Country('🇮🇸', 'Iceland', '+354'),
-  _Country('🇮🇳', 'India', '+91'),
-  _Country('🇮🇩', 'Indonesia', '+62'),
-  _Country('🇮🇷', 'Iran', '+98'),
-  _Country('🇮🇶', 'Iraq', '+964'),
-  _Country('🇮🇪', 'Ireland', '+353'),
-  _Country('🇮🇱', 'Israel', '+972'),
-  _Country('🇮🇹', 'Italy', '+39'),
-  _Country('🇯🇲', 'Jamaica', '+1-876'),
-  _Country('🇯🇵', 'Japan', '+81'),
-  _Country('🇯🇴', 'Jordan', '+962'),
-  _Country('🇰🇿', 'Kazakhstan', '+7'),
-  _Country('🇰🇪', 'Kenya', '+254'),
-  _Country('🇰🇷', 'South Korea', '+82'),
-  _Country('🇰🇼', 'Kuwait', '+965'),
-  _Country('🇰🇬', 'Kyrgyzstan', '+996'),
-  _Country('🇱🇦', 'Laos', '+856'),
-  _Country('🇱🇻', 'Latvia', '+371'),
-  _Country('🇱🇧', 'Lebanon', '+961'),
-  _Country('🇱🇾', 'Libya', '+218'),
-  _Country('🇱🇹', 'Lithuania', '+370'),
-  _Country('🇱🇺', 'Luxembourg', '+352'),
-  _Country('🇲🇬', 'Madagascar', '+261'),
-  _Country('🇲🇾', 'Malaysia', '+60'),
-  _Country('🇲🇻', 'Maldives', '+960'),
-  _Country('🇲🇱', 'Mali', '+223'),
-  _Country('🇲🇹', 'Malta', '+356'),
-  _Country('🇲🇷', 'Mauritania', '+222'),
-  _Country('🇲🇺', 'Mauritius', '+230'),
-  _Country('🇲🇽', 'Mexico', '+52'),
-  _Country('🇲🇩', 'Moldova', '+373'),
-  _Country('🇲🇳', 'Mongolia', '+976'),
-  _Country('🇲🇦', 'Morocco', '+212'),
-  _Country('🇲🇿', 'Mozambique', '+258'),
-  _Country('🇲🇲', 'Myanmar', '+95'),
-  _Country('🇳🇦', 'Namibia', '+264'),
-  _Country('🇳🇵', 'Nepal', '+977'),
-  _Country('🇳🇱', 'Netherlands', '+31'),
-  _Country('🇳🇿', 'New Zealand', '+64'),
-  _Country('🇳🇮', 'Nicaragua', '+505'),
-  _Country('🇳🇪', 'Niger', '+227'),
-  _Country('🇳🇬', 'Nigeria', '+234'),
-  _Country('🇳🇴', 'Norway', '+47'),
-  _Country('🇴🇲', 'Oman', '+968'),
-  _Country('🇵🇰', 'Pakistan', '+92'),
-  _Country('🇵🇦', 'Panama', '+507'),
-  _Country('🇵🇾', 'Paraguay', '+595'),
-  _Country('🇵🇪', 'Peru', '+51'),
-  _Country('🇵🇭', 'Philippines', '+63'),
-  _Country('🇵🇱', 'Poland', '+48'),
-  _Country('🇵🇹', 'Portugal', '+351'),
-  _Country('🇶🇦', 'Qatar', '+974'),
-  _Country('🇷🇴', 'Romania', '+40'),
-  _Country('🇷🇺', 'Russia', '+7'),
-  _Country('🇷🇼', 'Rwanda', '+250'),
-  _Country('🇸🇦', 'Saudi Arabia', '+966'),
-  _Country('🇸🇳', 'Senegal', '+221'),
-  _Country('🇷🇸', 'Serbia', '+381'),
-  _Country('🇸🇬', 'Singapore', '+65'),
-  _Country('🇸🇰', 'Slovakia', '+421'),
-  _Country('🇸🇮', 'Slovenia', '+386'),
-  _Country('🇸🇴', 'Somalia', '+252'),
-  _Country('🇿🇦', 'South Africa', '+27'),
-  _Country('🇸🇸', 'South Sudan', '+211'),
-  _Country('🇪🇸', 'Spain', '+34'),
-  _Country('🇱🇰', 'Sri Lanka', '+94'),
-  _Country('🇸🇩', 'Sudan', '+249'),
-  _Country('🇸🇪', 'Sweden', '+46'),
-  _Country('🇨🇭', 'Switzerland', '+41'),
-  _Country('🇸🇾', 'Syria', '+963'),
-  _Country('🇹🇼', 'Taiwan', '+886'),
-  _Country('🇹🇯', 'Tajikistan', '+992'),
-  _Country('🇹🇿', 'Tanzania', '+255'),
-  _Country('🇹🇭', 'Thailand', '+66'),
-  _Country('🇹🇬', 'Togo', '+228'),
-  _Country('🇹🇳', 'Tunisia', '+216'),
-  _Country('🇹🇷', 'Turkey', '+90'),
-  _Country('🇹🇲', 'Turkmenistan', '+993'),
-  _Country('🇺🇬', 'Uganda', '+256'),
-  _Country('🇺🇦', 'Ukraine', '+380'),
-  _Country('🇦🇪', 'United Arab Emirates', '+971'),
-  _Country('🇬🇧', 'United Kingdom', '+44'),
-  _Country('🇺🇸', 'United States', '+1'),
-  _Country('🇺🇾', 'Uruguay', '+598'),
-  _Country('🇺🇿', 'Uzbekistan', '+998'),
-  _Country('🇻🇪', 'Venezuela', '+58'),
-  _Country('🇻🇳', 'Vietnam', '+84'),
-  _Country('🇾🇪', 'Yemen', '+967'),
-  _Country('🇿🇲', 'Zambia', '+260'),
-  _Country('🇿🇼', 'Zimbabwe', '+263'),
-];
-
-_Country _defaultCountry() =>
-    _countries.firstWhere((c) => c.dialCode == '+91');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step4FamilyComposition
@@ -438,14 +276,13 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
   Uint8List? _photo;
   String _existingPhotoUrl = '';
   bool _photoError = false;
-  late _Country _mobileCountry;
+  late Country _mobileCountry;
 
   // Validation constants
   static const int _minPhotoBytes = 10240;  // 10 KB
   static const int _maxPhotoBytes = 102400; // 100 KB
 
   static final _nameRegex = RegExp(r'^[a-zA-Z\s\.\-]+$');
-  static final _mobileRegex = RegExp(r'^[6-9]\d{9}$');
 
   bool get _isMinor {
     final age = int.tryParse(_ageController.text.trim()) ?? 0;
@@ -486,10 +323,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
     _dob = m?.dob;
     _photo = m?.localPhotoBytes;
     _existingPhotoUrl = m?.photoUrl ?? '';
-    _mobileCountry = _countries.firstWhere(
-      (c) => c.dialCode == (m?.mobileCountryCode ?? '+91'),
-      orElse: _defaultCountry,
-    );
+    _mobileCountry = Countries.fromDialCode(m?.mobileCountryCode ?? '+91');
   }
 
   @override
@@ -545,7 +379,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
   // ── Country picker ────────────────────────────────────────────────────────
   void _showCountryPicker() {
     final searchCtrl = TextEditingController();
-    List<_Country> filtered = List.from(_countries);
+    List<Country> filtered = List.from(Countries.all);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -576,7 +410,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                     isDense: true,
                   ),
                   onChanged: (q) => setSheet(() {
-                    filtered = _countries
+                    filtered = Countries.all
                         .where((c) =>
                             c.name.toLowerCase().contains(q.toLowerCase()) ||
                             c.dialCode.contains(q))
@@ -756,13 +590,10 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 textCapitalization: TextCapitalization.words,
                 validator: (v) {
                   final val = v?.trim() ?? '';
-                  if (val.length < 2) {
-                    return 'Enter a valid full name (letters only, min 2 chars)';
-                  }
-                  if (val.length > 100) return 'Name too long (max 100 chars)';
-                  if (!_nameRegex.hasMatch(val)) {
-                    return 'Enter a valid full name (letters only, min 2 chars)';
-                  }
+                  if (val.isEmpty) return 'Full Name is required';
+                  if (val.length < 2) return 'Full Name must be at least 2 characters';
+                  if (val.length > 100) return 'Full Name too long (max 100 chars)';
+                  if (!_nameRegex.hasMatch(val)) return 'Enter a valid Full Name (letters and spaces only)';
                   return null;
                 },
               ),
@@ -774,7 +605,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _relationship.isNotEmpty ? _relationship : null,
                 onChanged: (v) => setState(() => _relationship = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select a relationship' : null,
+                    (v == null || v.isEmpty) ? 'Relationship is required' : null,
               ),
 
               // ── Gender ────────────────────────────────────────────────────
@@ -784,7 +615,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _gender.isNotEmpty ? _gender : null,
                 onChanged: (v) => setState(() => _gender = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select gender' : null,
+                    (v == null || v.isEmpty) ? 'Gender is required' : null,
               ),
 
               // ── Blood Group ───────────────────────────────────────────────
@@ -794,7 +625,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _bloodGroup.isNotEmpty ? _bloodGroup : null,
                 onChanged: (v) => setState(() => _bloodGroup = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select a blood group' : null,
+                    (v == null || v.isEmpty) ? 'Blood Group is required' : null,
               ),
 
               // ── Date of Birth (REQUIRED) ──────────────────────────────────
@@ -805,7 +636,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                     label: 'Date of Birth *',
                     controller: _dobController,
                     validator: (_) {
-                      if (_dob == null) return 'Date of birth is required';
+                      if (_dob == null) return 'Date of Birth is required';
                       if (_dob!.isAfter(DateTime.now())) {
                         return 'Date cannot be in the future';
                       }
@@ -827,10 +658,10 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 ],
                 validator: (v) {
                   final val = v?.trim() ?? '';
-                  if (val.isEmpty) return 'Age is required (0–120)';
+                  if (val.isEmpty) return 'Age is required';
                   final age = int.tryParse(val);
                   if (age == null || age < 0 || age > 120) {
-                    return 'Age is required (0–120)';
+                    return 'Enter a valid Age (0–120)';
                   }
                   return null;
                 },
@@ -865,7 +696,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                   selectedItem: _maritalStatus.isNotEmpty ? _maritalStatus : null,
                   onChanged: (v) => setState(() => _maritalStatus = v ?? ''),
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Please select marital status' : null,
+                      (v == null || v.isEmpty) ? 'Marital Status is required' : null,
                 ),
 
               // ── Area ──────────────────────────────────────────────────────
@@ -875,7 +706,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _area.isNotEmpty ? _area : null,
                 onChanged: (v) => setState(() => _area = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select an area' : null,
+                    (v == null || v.isEmpty) ? 'Area is required' : null,
               ),
 
               // ── Education ─────────────────────────────────────────────────
@@ -885,7 +716,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _education.isNotEmpty ? _education : null,
                 onChanged: (v) => setState(() => _education = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select education level' : null,
+                    (v == null || v.isEmpty) ? 'Education Level is required' : null,
               ),
 
               // ── Occupation ────────────────────────────────────────────────
@@ -895,7 +726,7 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                 selectedItem: _occupation.isNotEmpty ? _occupation : null,
                 onChanged: (v) => setState(() => _occupation = v ?? ''),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Please select occupation' : null,
+                    (v == null || v.isEmpty) ? 'Occupation is required' : null,
               ),
 
               // ── Mobile (REQUIRED) with country code ───────────────────────
@@ -931,8 +762,13 @@ class _MemberFormSheetState extends State<_MemberFormSheet> {
                             ),
                             validator: (v) {
                               final val = v?.trim() ?? '';
-                              if (val.length < 5 || val.length > 15) {
-                                return 'Enter a valid mobile number';
+                              if (val.isEmpty) return 'Mobile Number is required';
+                              if (!RegExp(r'^\d+$').hasMatch(val)) return 'Enter digits only for Mobile Number';
+                              
+                              if (_mobileCountry.dialCode == '+91') {
+                                if (val.length != 10) return 'Enter a valid 10-digit Mobile Number';
+                              } else {
+                                if (val.length < 5 || val.length > 15) return 'Enter a valid Mobile Number (5-15 digits)';
                               }
                               return null;
                             },

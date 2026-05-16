@@ -52,7 +52,7 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
             items: DropdownData.educationList,
             selectedItem: widget.family.education.isNotEmpty ? widget.family.education : null,
             onChanged: (v) => setState(() => widget.family.education = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select education level' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Education Level is required' : null,
           ),
           if (widget.family.education == 'Other')
             CustomTextField(
@@ -62,9 +62,10 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
               validator: (v) {
                 final val = v?.trim() ?? '';
                 widget.family.educationOther = val;
-                if (val.length < 2) return 'Please specify your education';
+                if (val.isEmpty) return 'Education details are required';
+                if (val.length < 2) return 'Education must be at least 2 characters';
                 if (val.length > 100) return 'Too long (max 100 chars)';
-                if (!_textRegex.hasMatch(val)) return 'Please specify your education';
+                if (!_textRegex.hasMatch(val)) return 'Invalid characters in education';
                 return null;
               },
             ),
@@ -76,7 +77,7 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
             items: DropdownData.occupationList,
             selectedItem: widget.family.occupation.isNotEmpty ? widget.family.occupation : null,
             onChanged: (v) => setState(() => widget.family.occupation = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select occupation' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Occupation is required' : null,
           ),
           if (widget.family.occupation == 'Other')
             CustomTextField(
@@ -86,9 +87,10 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
               validator: (v) {
                 final val = v?.trim() ?? '';
                 widget.family.occupationOther = val;
-                if (val.length < 2) return 'Please specify your occupation';
+                if (val.isEmpty) return 'Occupation details are required';
+                if (val.length < 2) return 'Occupation must be at least 2 characters';
                 if (val.length > 100) return 'Too long (max 100 chars)';
-                if (!_textRegex.hasMatch(val)) return 'Please specify your occupation';
+                if (!_textRegex.hasMatch(val)) return 'Invalid characters in occupation';
                 return null;
               },
             ),
@@ -100,7 +102,7 @@ class _Step3EducationOccupationState extends State<Step3EducationOccupation> {
             items: DropdownData.annualIncomeList,
             selectedItem: widget.family.annualIncome.isNotEmpty ? widget.family.annualIncome : null,
             onChanged: (v) => setState(() => widget.family.annualIncome = v ?? ''),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please select or enter annual income' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Annual Income is required' : null,
           ),
         ],
       ),

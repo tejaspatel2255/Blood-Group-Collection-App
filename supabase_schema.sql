@@ -40,13 +40,20 @@ CREATE TABLE IF NOT EXISTS families (
   city TEXT,
   state TEXT,
   pin_code TEXT,
+  area TEXT,
   mobile TEXT NOT NULL,
+  mobile_country_code TEXT DEFAULT '+91',
   whatsapp TEXT,
+  whatsapp_country_code TEXT DEFAULT '+91',
   email TEXT,
   
   -- Login Credentials (for HOF login)
   login_username TEXT NOT NULL,
-  login_password TEXT NOT NULL
+  login_password TEXT NOT NULL,
+
+  -- Constraints
+  CONSTRAINT check_india_mobile CHECK (mobile_country_code != '+91' OR (mobile ~ '^[0-9]{10}$')),
+  CONSTRAINT check_india_whatsapp CHECK (whatsapp_country_code != '+91' OR (whatsapp IS NULL OR whatsapp = '' OR whatsapp ~ '^[0-9]{10}$'))
 );
 
 -- 3. Table for Family Members
@@ -62,9 +69,14 @@ CREATE TABLE IF NOT EXISTS family_members (
   marital_status TEXT NOT NULL,
   education TEXT,
   occupation TEXT,
+  area TEXT,
   mobile TEXT,
+  mobile_country_code TEXT DEFAULT '+91',
   photo_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT check_india_member_mobile CHECK (mobile_country_code != '+91' OR (mobile IS NULL OR mobile = '' OR mobile ~ '^[0-9]{10}$'))
 );
 
 -- 4. Storage Bucket
